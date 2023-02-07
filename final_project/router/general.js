@@ -46,22 +46,17 @@ public_users.get('/author/:author',function (req, res) {
 // Get all books based on title
 public_users.get('/title/:title',function (req, res) {
   //Write your code here
-  let title = req.params.title;
-  let keys = Object.keys(books);
-  keys.forEach( (key) => {
-    if (books[key].title === title) {
-        res.status(200).send(books[key]);
-    }
-  })
-  return res.status(200).send('Book not found');
+  getBookByTitle(req.params.title)
+  .then( result => res.send(result))
+  .catch( error => res.status(400).send(error))
 });
 
 //  Get book review
 public_users.get('/review/:isbn',function (req, res) {
   //Write your code here
-  let isbn = req.params.isbn;
-  let reviews = books[isbn].reviews;
-  return res.status(200).send(reviews);
+  getBookReviews(req.params.isbn)
+  .then( result => res.send(result))
+  .catch( error => res.status(400).send(error))
 });
 
 let getAllBooks = new Promise((resolve, reject) => {
@@ -73,7 +68,7 @@ let getBookByISBN = (isbn) => {
         if (books[isbn]) {
             resolve(books[isbn]);
         } else {
-            reject('Book no found')
+            reject('Book not found')
         }
     })
 }
@@ -104,6 +99,20 @@ let getBookByTitle = (title) => {
             }
         })
         reject('Book not found');
+    })
+}
+
+let getBookReviews = (isbn) => {
+    return new Promise((resolve, reject) => {
+        if (books[isbn]) {
+            if (Object.keys(books[isbn].reviews).length > 0) {
+                resolve(books[isbn].reviews);
+            } else {
+                reject('This book has no reviews')
+            }
+        } else {
+            reject('Book not found');
+        }
     })
 }
 
