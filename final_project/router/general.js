@@ -65,7 +65,7 @@ public_users.get('/title/:title',function (req, res) {
 public_users.get('/review/:isbn',function (req, res) {
   //Write your code here
   let isbn = req.params.isbn;
-  let reviews = books[isbn].review;
+  let reviews = books[isbn].reviews;
   return res.status(200).send(reviews);
 });
 

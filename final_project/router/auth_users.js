@@ -1,3 +1,4 @@
+const e = require('express');
 const express = require('express');
 const jwt = require('jsonwebtoken');
 let books = require("./booksdb.js");
@@ -35,7 +36,7 @@ regd_users.post("/login", (req,res) => {
   const username = req.query.username;
   const password = req.query.password;
   if (!username || !password) {
-      return res.status(404).json({message: "Error logging in"});
+      return res.status(404).send("Error logging in");
   }
  if (authenticatedUser(username,password)) {
     let accessToken = jwt.sign({
@@ -46,7 +47,7 @@ regd_users.post("/login", (req,res) => {
   }
   return res.status(200).send("User successfully logged in");
   } else {
-    return res.status(208).json({message: "Invalid Login. Check username and password"});
+    return res.status(208).send("Invalid Login. Check username and password");
     }
 });
 
@@ -55,7 +56,7 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
   //Write your code here
   let isbn = req.params.isbn;
   let username = req.session.authorization.username;
-  let reviews = books[isbn].review;
+  let reviews = books[isbn].reviews;
   if (req.query.review){
       if (books[isbn]) {
         let review = req.query.review;
@@ -63,25 +64,45 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
             let reviewKeys = Object.keys(reviews);
             reviewKeys.forEach((key) => {
                if (reviews[key] === username) {
-                books[isbn].review[username] = review;
+                books[isbn].reviews[username] = review;
                 return res.send("Review from "+username+ " has been updated!");
                } 
             });
             Object.assign(reviews, {[username]: review});
-            books[isbn].review = reviews;
+            books[isbn].reviews = reviews;
+            return res.send("Review from "+username+ " has been added!");
         } else {
-            books[isbn].review = {
+            books[isbn].reviews = {
                 [username]: review,
             }
         }
-        
+        return res.send("Review from "+username+ " has been added!");
     }
-        res.send("Review from "+username+ " has been added!");
       } else {
-        res.status(404).json({message: "Book not found"});
+        res.status(404).send("Book not found");
       }
     
 });
+
+regd_users.delete("/auth/review/:isbn", (req, res) => {
+    let isbn = req.params.isbn;
+    let username = req.session.authorization.username;
+    let reviews = books[isbn].reviews;
+
+    if (reviews) {
+        let reviewKeys = Object.keys(reviews);
+        reviewKeys.forEach((key) => { 
+            if (key === username) {
+                delete reviews[username];
+                books[isbn].reviews = reviews;
+                return res.send("The review has been deleted");
+            }
+        });
+        res.status(404).send("This user has not posted any review on this book");
+        } else {
+        res.status(404).send("This book has no reviews yet");
+    }
+})
 
 module.exports.authenticated = regd_users;
 module.exports.isValid = isValid;
